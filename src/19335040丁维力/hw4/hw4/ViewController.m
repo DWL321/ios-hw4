@@ -176,23 +176,26 @@
 }
 
 -(void)clean{
-    [_picData removeAllObjects];
-    for(int i=0;i<5;i++){
-        [_picData addObject:[[NSData alloc]init]];
+    if(_picData.count>0){
+        [_picData removeAllObjects];
+        for(int i=0;i<5;i++){
+            [_picData addObject:[[NSData alloc]init]];
+        }
+        [_collectionView reloadData];
     }
-    [_collectionView reloadData];
 }
 
 -(void)delete{
-    _isempty=0;
-    NSArray *cacPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *cachePath = [cacPath objectAtIndex:0];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    for(int i = 0; i < 5; i ++){
-        NSString *imageFilePath = [cachePath stringByAppendingPathComponent:[_url[i] lastPathComponent]];
-        [fileManager removeItemAtPath:imageFilePath error:nil];
+    if(_isempty>0){
+        _isempty=0;
+        NSArray *cacPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        NSString *cachePath = [cacPath objectAtIndex:0];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        for(int i = 0; i < 5; i ++){
+            NSString *imageFilePath = [cachePath stringByAppendingPathComponent:[_url[i] lastPathComponent]];
+            [fileManager removeItemAtPath:imageFilePath error:nil];
+        }
     }
-    _isempty=true;
 }
 
 -(void)downloadImg:(NSString*)the_url{
