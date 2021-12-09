@@ -19,7 +19,7 @@
 @property (strong,nonatomic) UIButton *delete_button;
 @property (strong,nonatomic) NSMutableArray *picData;
 @property (strong,nonatomic) NSMutableArray *url;
-@property BOOL isempty;
+@property int isempty;
 
 @end
 
@@ -27,7 +27,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _isempty=true;
+    _isempty=0;
     [self CreateTitle];
     _url = [[NSMutableArray alloc] initWithCapacity:0];
     [_url removeAllObjects];
@@ -147,18 +147,20 @@
 
 -(void)Loading{
     NSString *pic=[[NSBundle mainBundle] pathForResource:@"loading" ofType:@"png"];
-    if(_isempty){
-        NSInvocationOperation *operation = [[NSInvocationOperation alloc]initWithTarget:self selector:@selector(downloadImg) object:nil];
+    if(_isempty<5){
         NSOperationQueue *queue = [[NSOperationQueue alloc]init];
-        [queue addOperation:operation];
+        for(NSInteger i=0;i<5;i++){
+            NSInvocationOperation *operation = [[NSInvocationOperation alloc]initWithTarget:self selector:@selector(downloadImg:) object:_url[i]];
+            [queue addOperation:operation];
+        }
     }
-    while (_isempty) {
+    while (_isempty<5) {
         for(int i=0;i<5;i++){
             [_picData replaceObjectAtIndex:i withObject:[NSData dataWithContentsOfFile:pic]];
             [self.collectionView reloadItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:i]]];
         }
     }
-    if(!_isempty){
+    if(_isempty>=5){
         [self clean];
         NSString *cachesPath=[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
         NSMutableArray *pic= [[NSMutableArray alloc] initWithCapacity:0];
@@ -182,6 +184,7 @@
 }
 
 -(void)delete{
+    _isempty=0;
     NSArray *cacPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachePath = [cacPath objectAtIndex:0];
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -192,7 +195,7 @@
     _isempty=true;
 }
 
--(void)downloadImg{
+-(void)downloadImg:(NSString*)the_url{
     NSArray *cacPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachePath = [cacPath objectAtIndex:0];
     //写入文件
@@ -200,12 +203,10 @@
         NSLog(@"目录未找到");
     }else {
         NSData *data;
-        for(int i=0;i<5;i++){
-            NSString *filePaht = [cachePath stringByAppendingPathComponent:[_url[i] lastPathComponent]];
-            data=[NSData dataWithContentsOfURL:[NSURL URLWithString:_url[i]]];
-            [data writeToFile:filePaht atomically:YES];
-        }
-        _isempty=false;
+        NSString *filePaht = [cachePath stringByAppendingPathComponent:[the_url lastPathComponent]];
+        data=[NSData dataWithContentsOfURL:[NSURL URLWithString:the_url]];
+        [data writeToFile:filePaht atomically:YES];
+        _isempty++;
     }
 }
 
